@@ -147,7 +147,6 @@ class Context {
     const resolveImport = async (entry: FileImport) => {
       entry.resolved = await this.resolve(entry.request, entry.from)
     }
-    console.log('get chunk local length', this.state.chunks.length, 'with', label, entries, imports)
 
     const chunk = new FileChunk(this.getUID('chunk'), label)
     if (entries.length || imports.length) {
@@ -156,7 +155,6 @@ class Context {
       chunk.imports = imports
       const existingChunk = this.state.chunks.find(entry => Helpers.serializeChunk(entry) === Helpers.serializeChunk(chunk))
       if (existingChunk) {
-        console.log('reusing existing chunk')
         return existingChunk
       }
     }

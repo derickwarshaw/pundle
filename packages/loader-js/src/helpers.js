@@ -59,7 +59,7 @@ export function processEnsure(context: Context, file: File, chunks: Array<FileCh
   }
   // NOTE: Replace node entry with the new chunk id because we no longer need entry anywhere
   path.node.arguments[0] = t.stringLiteral(chunk.getId().toString())
-  path.node.arguments[2] = nodeCallback
+  path.node.arguments.length = 2
 
   chunks.push(chunk)
 }

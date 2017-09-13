@@ -46,6 +46,7 @@ class Context {
   }
   clone(): Context {
     const cloned = new Context(this.config)
+    cloned.uid = this.uid
     cloned.components = this.components
     return cloned
   }

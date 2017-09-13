@@ -28,7 +28,7 @@ class Pundle {
     this.config = config
     this.emitter = new Emitter()
     this.context = new Context(config)
-    this.compilation = new Compilation(this.context)
+    this.compilation = new Compilation()
     this.subscriptions = new CompositeDisposable()
 
     this.subscriptions.add(this.emitter)
@@ -95,14 +95,14 @@ class Pundle {
     if (useCache) {
       await this.getCachedFiles(await this.getCache(), oldFiles)
     }
-    return this.compilation.build(useCache, oldFiles)
+    return this.compilation.build(this.context.clone(), useCache, oldFiles)
   }
   async watch(useCache: boolean = true): Promise<Disposable> {
     const oldFiles = new Map()
     if (useCache) {
       await this.getCachedFiles(await this.getCache(), oldFiles)
     }
-    return this.compilation.watch(useCache, oldFiles)
+    return this.compilation.watch(this.context.clone(), useCache, oldFiles)
   }
   fill(html: string, chunks: Array<FileChunk>, config: { publicRoot: string, bundlePath: string }): string {
     const primaryChunks = []
@@ -117,6 +117,7 @@ class Pundle {
     return html.replace('<!-- pundle scripts -->', primaryChunks.join('\n').trim())
   }
   dispose() {
+    this.context.components.forEach(({ component, config }) => this.context.deleteComponent(component, config))
     this.subscriptions.dispose()
   }
   // NOTE: Components are loaded before presets. This is important for order-sensitive components

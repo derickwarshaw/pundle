@@ -32,7 +32,6 @@ function create<T1, T2>(config: CallbackOrConfig<T2>, defaultConfig: Object, typ
   let callback
   let name = null
   let activate = noOp
-  let dispose = noOp
   if (typeof config === 'function') {
     invariant(typeof config === 'function', 'Parameter 1 must be a function')
     callback = config
@@ -40,10 +39,6 @@ function create<T1, T2>(config: CallbackOrConfig<T2>, defaultConfig: Object, typ
     if (config.activate) {
       invariant(typeof config.activate === 'function', 'config.activate must be a function')
       activate = config.activate
-    }
-    if (config.dispose) {
-      invariant(typeof config.dispose === 'function', 'config.dispose must be a function')
-      dispose = config.dispose
     }
     if (config.name) {
       invariant(typeof config.name === 'string', 'config.name must be a string')
@@ -62,7 +57,6 @@ function create<T1, T2>(config: CallbackOrConfig<T2>, defaultConfig: Object, typ
     activate,
     name,
     callback,
-    dispose,
     defaultConfig,
   }
 }

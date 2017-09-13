@@ -8,6 +8,8 @@ import { MessageIssue, FileMessageIssue } from '../issues'
 import FileChunk from '../file-chunk'
 import * as Helpers from './helpers'
 import type {
+  ContextState,
+
   FileImport,
   PundleConfig,
   ComponentAny,
@@ -18,13 +20,23 @@ import type {
 
 class Context {
   uid: Map<string, number>;
+  state: ContextState;
   config: PundleConfig;
   components: Set<ComponentConfigured>;
 
   constructor(config: PundleConfig) {
     this.uid = new Map()
+    this.state = {
+      files: new Map(),
+      chunks: [],
+    }
     this.config = config
     this.components = new Set()
+  }
+  clone(): Context {
+    const cloned = new Context(this.config)
+    cloned.components = this.components
+    return cloned
   }
   async report(report: Object): Promise<void> {
     let tried = false

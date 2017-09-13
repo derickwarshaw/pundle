@@ -11,21 +11,21 @@ export type ComponentRules = {
   extensions?: Array<string>,
 }
 
-export type Component<T1, T2> = {
+export type Component<T1, T2> = {|
   $type: T1,
   $apiVersion: number,
   name: ?string,
   activate(config: Object): void,
   callback: T2,
-  dispose(config: Object): void,
   defaultConfig: Object,
-}
+|}
 
-export type CallbackOrConfig<T> = T | {
+export type CallbackOrConfig<T> = T | {|
+  name: ?string,
   activate?: ((config: Object) => void),
   callback: T,
   dispose?: ((config: Object) => void),
-}
+|}
 
 export type FileImport = {
   id: number,
@@ -140,6 +140,10 @@ export type ComponentAny = Loader | Plugin | Resolver | Reporter | Generator | T
 export type ComponentConfigured = {
   config: Object,
   component: ComponentAny,
+}
+export type ContextState = {
+  files: Map<string, File>,
+  chunks: Array<FileChunk>,
 }
 
 export type {

@@ -35,44 +35,13 @@ export function getParsedReplacement(rawValue: any): Object {
   return parsedValue
 }
 
-// TODO: Validate the path and disallow bad characters in chunk name
-// because we use that name as label when writing to disk
-export function processEnsure(context: Context, file: File, chunks: Array<FileChunk>, path: Object) {
-  const [nodeEntry, nodeCallback, nodeName] = path.node.arguments
-
-  const chunk = context.getChunk(nodeName && nodeName.type === 'StringLiteral' ? nodeName.value : null)
-  nodeEntry.elements.forEach((element) => {
-    chunk.addImport(context.getImportRequest(element.value, file.filePath))
-  })
-  if (nodeCallback && nodeCallback.params.length) {
-    const nodeCallbackParam = nodeCallback.params[0]
-    path.scope.traverse(nodeCallback, {
-      CallExpression({ node, scope }) {
-        if (getName(node.callee) === nodeCallbackParam.name && !scope.getBinding(nodeCallbackParam.name)) {
-          const argument = node.arguments[0]
-          const request = context.getImportRequest(argument.value, file.filePath)
-          chunk.addImport(request)
-          node.arguments[0].value = request.id.toString()
-        }
-      },
-    })
-  }
-  // NOTE: Replace node entry with the new chunk id because we no longer need entry anywhere
-  path.node.arguments[0] = t.stringLiteral(chunk.getId().toString())
-  path.node.arguments.length = 2
-
-  chunks.push(chunk)
-}
-
-export function processImport(context: Context, file: File, chunks: Array<FileChunk>, path: Object) {
-  const chunk = context.getChunk()
-
+export async function processImport(context: Context, file: File, chunks: Array<FileChunk>, path: Object) {
   const argument = path.node.arguments[0]
   if (!argument || argument.type !== 'StringLiteral') {
     return
   }
   const importRequest = context.getImportRequest(argument.value, file.filePath)
-  chunk.addImport(importRequest)
+  const chunk = await context.getChunk(null, [], [importRequest])
 
   path.replaceWith(t.callExpression(
     t.identifier('require.import'),

@@ -27,9 +27,9 @@ export default createChunkTransformer(async function(context: Context, config: O
     // No common files found
     return
   }
-  const newChunk = context.getChunk(null, config.name, null)
+  const newChunk = context.getChunk(config.name)
   newChunk.files = newChunkFiles
-  chunks.push(newChunk)
+  chunks.unshift(newChunk)
 }, {
   name: 'common',
 })

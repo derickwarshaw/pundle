@@ -40,7 +40,7 @@ export function getParsedReplacement(rawValue: any): Object {
 export function processEnsure(context: Context, file: File, chunks: Array<FileChunk>, path: Object) {
   const [nodeEntry, nodeCallback, nodeName] = path.node.arguments
 
-  const chunk = context.getChunk(null, nodeName && nodeName.type === 'StringLiteral' ? nodeName.value : null)
+  const chunk = context.getChunk(nodeName && nodeName.type === 'StringLiteral' ? nodeName.value : null)
   nodeEntry.elements.forEach((element) => {
     chunk.addImport(context.getImportRequest(element.value, file.filePath))
   })

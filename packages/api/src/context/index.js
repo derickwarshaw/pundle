@@ -1,6 +1,7 @@
 /* @flow */
 
 import invariant from 'assert'
+import pEachSeries from 'p-each-series'
 import { Disposable } from 'sb-event-kit'
 import { version as API_VERSION } from '../helpers'
 import { MessageIssue, FileMessageIssue } from '../issues'
@@ -8,8 +9,7 @@ import { MessageIssue, FileMessageIssue } from '../issues'
 import FileChunk from '../file-chunk'
 import * as Helpers from './helpers'
 import type {
-  ContextState,
-
+  File,
   FileImport,
   PundleConfig,
   ComponentAny,
@@ -17,6 +17,11 @@ import type {
   GeneratorResult,
   ComponentConfigured,
 } from '../../types'
+
+type ContextState = {
+  files: Map<string, File>,
+  chunks: Array<FileChunk>,
+}
 
 class Context {
   uid: Map<string, number>;
@@ -32,6 +37,12 @@ class Context {
     }
     this.config = config
     this.components = new Set()
+  }
+  async load(): Promise<void> {
+    await pEachSeries(this.config.entry, async (request) => {
+      const chunk = await this.getChunk(null, [this.getImportRequest(request)], [])
+      this.state.chunks.push(chunk)
+    })
   }
   clone(): Context {
     const cloned = new Context(this.config)
@@ -132,14 +143,29 @@ class Context {
       this.uid.set(key, parsed.UID[key])
     }
   }
+  async getChunk(label: ?string = null, entries: Array<FileImport> = [], imports: Array<FileImport> = []): Promise<FileChunk> {
+    const resolveImport = async (entry: FileImport) => {
+      entry.resolved = await this.resolve(entry.request, entry.from)
+    }
+    console.log('get chunk local length', this.state.chunks.length, 'with', label, entries, imports)
+
+    const chunk = new FileChunk(this.getUID('chunk'), label)
+    if (entries.length || imports.length) {
+      await Promise.all(entries.map(resolveImport).concat(imports.map(resolveImport)))
+      chunk.entries = entries
+      chunk.imports = imports
+      const existingChunk = this.state.chunks.find(entry => Helpers.serializeChunk(entry) === Helpers.serializeChunk(chunk))
+      if (existingChunk) {
+        console.log('reusing existing chunk')
+        return existingChunk
+      }
+    }
+    return chunk
+  }
   getUID(label: string): number {
     const uid = (this.uid.get(label) || 0) + 1
     this.uid.set(label, uid)
     return uid
-  }
-  getChunk(label: ?string = null): FileChunk {
-    const id = this.getUID('chunk')
-    return new FileChunk(id, label)
   }
   getImportRequest(request: string, from: ?string = null): FileImport {
     return {

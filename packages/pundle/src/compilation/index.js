@@ -161,16 +161,11 @@ export default class Compilation {
     chunk.imports.forEach(entry => iterate(entry))
   }
   async build(context: Context, useCache: boolean, oldFiles: Map<string, File> = new Map()): Promise<Array<FileChunk>> {
-    const files: Map<string, File> = new Map()
-    let chunks = context.config.entry.map((request) => {
-      const chunk = context.getChunk()
-      chunk.addEntry(context.getImportRequest(request))
-      return chunk
-    })
-
+    await context.load()
+    let chunks = context.state.chunks
     await Promise.all(chunks.map(chunk =>
       Promise.all(chunk.entries.map(chunkEntry =>
-        this.processFileTree(context, chunkEntry, files, oldFiles, useCache, false, function(_: ?File, file: File) {
+        this.processFileTree(context, chunkEntry, context.state.files, oldFiles, useCache, false, function(_: ?File, file: File) {
           const fileChunks = file.getChunks()
           if (fileChunks.length) {
             chunks = chunks.concat(fileChunks)
@@ -178,7 +173,7 @@ export default class Compilation {
         }),
       )),
     ))
-    chunks.forEach(chunk => this.processChunk(chunk, files))
+    chunks.forEach(chunk => this.processChunk(chunk, context.state.files))
     for (const entry of context.getComponents('chunk-transformer')) {
       await context.invokeComponent(entry, 'callback', [], [chunks])
     }
@@ -186,13 +181,10 @@ export default class Compilation {
     return chunks
   }
   async watch(context: Context, useCache: boolean, oldFiles: Map<string, File> = new Map()): Promise<Disposable> {
+    await context.load()
     let queue = Promise.resolve()
-    const chunks: Array<FileChunk> = context.config.entry.map((request) => {
-      const chunk = context.getChunk()
-      chunk.addEntry(context.getImportRequest(request))
-      return chunk
-    })
 
+    const chunks = context.state.chunks
     const files: Map<string, File> = new Map()
     const watcher = new Watcher({
       usePolling: context.config.watcher.usePolling,

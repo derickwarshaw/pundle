@@ -10,7 +10,6 @@ import * as Helpers from './helpers'
 
 const RESOLVE_NAMES = new Set([
   'require',
-  'require.ensure',
   'require.resolve',
   'module.hot.accept',
   'module.hot.decline',
@@ -36,6 +35,7 @@ export default createLoader(async function(context: Context, config: Object, fil
     imports: [],
     names: [],
   }
+  const promises = []
 
   let ast
   try {
@@ -95,7 +95,7 @@ export default createLoader(async function(context: Context, config: Object, fil
     },
     CallExpression(path) {
       if (path.node.callee.type === 'Import') {
-        Helpers.processImport(context, file, chunks, path)
+        promises.push(Helpers.processImport(context, file, chunks, path))
         return
       }
       const name = Helpers.getName(path.node.callee)
@@ -103,7 +103,7 @@ export default createLoader(async function(context: Context, config: Object, fil
         return
       }
       const parameter = path.node.arguments && path.node.arguments[0]
-      if (!parameter || parameter.type !== (name === 'require.ensure' ? 'ArrayExpression' : 'StringLiteral')) {
+      if (!parameter || parameter.type !== 'StringLiteral') {
         return
       }
       if (REQUIRE_NAMES.has(name)) {
@@ -112,16 +112,13 @@ export default createLoader(async function(context: Context, config: Object, fil
         }
         file.useFeature(FILE_FEATURES.CJS_IMPORT)
       }
-      if (name === 'require.ensure') {
-        Helpers.processEnsure(context, file, chunks, path)
-      } else {
-        processResolve(parameter)
-      }
+      processResolve(parameter)
     },
     Identifier: processReplaceable,
     MemberExpression: processReplaceable,
   })
 
+  await Promise.all(promises)
   const compiled = generate(ast, {
     quotes: 'single',
     filename: file.filePath,

@@ -141,10 +141,6 @@ export type ComponentConfigured = {
   config: Object,
   component: ComponentAny,
 }
-export type ContextState = {
-  files: Map<string, File>,
-  chunks: Array<FileChunk>,
-}
 
 export type {
   File,

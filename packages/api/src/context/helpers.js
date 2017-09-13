@@ -2,7 +2,8 @@
 
 import unique from 'lodash.uniq'
 import mergeSourceMap from 'merge-source-map'
-import type { ComponentConfigured } from '../../types'
+import type FileChunk from '../file-chunk'
+import type { ComponentConfigured, FileImport } from '../../types'
 
 // NOTE: The reason we only count in loaders and not transformers even though they could be useful
 // in cases like typescript is because the typescript preset includes it's own resolver.
@@ -36,4 +37,14 @@ export function mergeResult(file: { contents: string, sourceMap: ?Object }, resu
     file.sourceMap = result.sourceMap
   }
   file.contents = result.contents
+}
+
+export function serializeImport(fileImport: FileImport): string {
+  return `${fileImport.from || 'null'}::${fileImport.request}::${fileImport.resolved || 'null'}`
+}
+
+export function serializeChunk(fileChunk: FileChunk): string {
+  const imports = fileChunk.imports.map(serializeImport)
+  const entries = fileChunk.entries.map(serializeImport)
+  return JSON.stringify({ imports, entries })
 }

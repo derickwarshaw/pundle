@@ -265,8 +265,7 @@ export default class Compilation {
           chunk.label = matchingChunk.label
           const index = chunks.indexOf(matchingChunk)
           if (index !== -1) {
-            chunks.splice(index, 1)
-            chunks.push(chunk)
+            chunks.splice(index, 1, chunk)
           }
         }
       })

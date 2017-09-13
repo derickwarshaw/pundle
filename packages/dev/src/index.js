@@ -8,7 +8,7 @@ import promiseDefer from 'promise.defer'
 import { CompositeDisposable } from 'sb-event-kit'
 import { getRelativeFilePath, createWatcher, MessageIssue } from 'pundle-api'
 import type Pundle from 'pundle'
-import type { File } from 'pundle-api'
+import type { File, Context } from 'pundle-api'
 import type { FileChunk, GeneratorResult } from 'pundle-api/types'
 
 import * as Helpers from './helpers'
@@ -22,6 +22,7 @@ class Server {
   cache: Object;
   config: ServerConfig;
   pundle: Pundle;
+  context: Context;
   connections: Set<Object>;
   subscriptions: CompositeDisposable;
   constructor(pundle: Pundle, config: ServerConfigInput) {
@@ -35,9 +36,9 @@ class Server {
       chunks: [],
       changed: new Map(),
       lastChunk: new Map(),
-      hasChanged: true,
     }
     this.pundle = pundle
+    this.context = this.pundle.context.clone()
     this.config = Helpers.fillConfig(config)
     this.connections = new Set()
     this.subscriptions = new CompositeDisposable()
@@ -46,15 +47,16 @@ class Server {
   }
   async activate() {
     const app = express()
+    const oldFiles = new Map()
 
     this.cache = await this.pundle.getCache()
     if (this.config.useCache) {
       const state = await this.cache.get('state')
       if (state) {
-        this.pundle.context.unserialize(state)
+        await this.context.unserialize(state)
       }
-      const oldFiles = await this.cache.get('files')
-      this.report(`Number of files in cache pool: ${oldFiles.length}`)
+      await this.pundle.getCachedFiles(this.cache, oldFiles)
+      this.report(`Number of files in cache pool: ${oldFiles.size}`)
     }
 
     await this.attachRoutes(app)
@@ -69,7 +71,7 @@ class Server {
       })
     }
     try {
-      this.subscriptions.add(await this.pundle.watch(this.config.useCache))
+      this.subscriptions.add(await this.pundle.compilation.watch(this.context, this.config.useCache, oldFiles))
     } catch (error) {
       server.close()
       throw error
@@ -82,7 +84,6 @@ class Server {
     const chunk = await this.generateChunk(url)
     if (chunk) {
       this.state.lastChunk.set(url, chunk)
-      this.state.hasChanged = false
     }
     return chunk
   }
@@ -90,13 +91,9 @@ class Server {
     const bundlePathExt = Path.extname(this.config.bundlePath)
     app.get([this.config.bundlePath, `${this.config.bundlePath.slice(0, -1 * bundlePathExt.length)}*`], async (req, res, next) => {
       try {
-        let chunk
-        const lastChunk = this.state.lastChunk.get(req.url)
-        if (!this.state.hasChanged && lastChunk) {
-          chunk = lastChunk
-        } else {
-          chunk = await this.generateChunkForUrl(req.url)
-        }
+        // TODO: Use lastChunk here for caching
+        // const lastChunk = this.state.lastChunk.get(req.url)
+        const chunk = await this.generateChunkForUrl(req.url)
         if (!chunk) {
           next()
           return
@@ -149,7 +146,6 @@ class Server {
         tick: (_: Object, __: Object, file: File) => {
           if (booted && file.filePath !== Helpers.browserFile) {
             this.state.changed.set(file.filePath, file)
-            this.state.hasChanged = true
           }
         },
         ready: () => {
@@ -200,11 +196,11 @@ class Server {
     this.writeToConnections({ type: 'report-clear' })
 
     const label = `hmr-${Date.now()}`
-    const chunk = this.pundle.context.getChunk(null, label, null)
+    const chunk = await this.pundle.context.getChunk(label)
     chunk.files = new Map(this.state.changed)
     const generated = await this.generate(chunk, {
       sourceMapPath: 'inline',
-      sourceMapNamespace: `hmr-${Date.now()}`,
+      sourceMapNamespace: label,
     })
     this.writeToConnections({ type: 'hmr', contents: generated.contents, files: generated.filesGenerated })
   }
@@ -236,8 +232,10 @@ class Server {
   }
   dispose() {
     if (!this.subscriptions.disposed) {
-      this.pundle.setCachedFiles(this.cache, this.state.files)
-      this.cache.setSync('state', this.pundle.context.serialize())
+      if (this.context) {
+        this.cache.setSync('state', this.context.serialize())
+        this.pundle.setCachedFiles(this.cache, this.state.files)
+      }
       Helpers.unregisterPundle(this.pundle)
     }
     this.subscriptions.dispose()

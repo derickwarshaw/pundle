@@ -19,19 +19,19 @@ import type {
 } from '../../types'
 
 type ContextState = {
+  uid: Map<string, number>,
   files: Map<string, File>,
   chunks: Array<FileChunk>,
 }
 
 class Context {
-  uid: Map<string, number>;
   state: ContextState;
   config: PundleConfig;
   components: Set<ComponentConfigured>;
 
   constructor(config: PundleConfig) {
-    this.uid = new Map()
     this.state = {
+      uid: new Map(),
       files: new Map(),
       chunks: [],
     }
@@ -39,6 +39,8 @@ class Context {
     this.components = new Set()
   }
   async load(): Promise<void> {
+    // NOTE: If it's non-empty it means it's unserialized
+    if (this.state.chunks.size) return
     await pEachSeries(this.config.entry, async (request) => {
       const chunk = await this.getChunk(null, [this.getImportRequest(request)], [])
       this.state.chunks.push(chunk)
@@ -46,7 +48,6 @@ class Context {
   }
   clone(): Context {
     const cloned = new Context(this.config)
-    cloned.uid = this.uid
     cloned.components = this.components
     return cloned
   }
@@ -123,26 +124,29 @@ class Context {
   }
   serialize(): string {
     const serializedUID = {}
-    this.uid.forEach(function(value, key) {
+    this.state.uid.forEach(function(value, key) {
       serializedUID[key] = value
     })
 
     return JSON.stringify({
       UID: serializedUID,
+      chunks: this.state.chunks.map(c => c.serialize()),
     })
   }
   unserialize(contents: string, force: boolean = false) {
-    if (this.uid.size && !force) {
+    if ((this.state.uid.size || this.state.chunks.length) && !force) {
       throw new Error('Cannot unserialize into non-empty state without force parameter')
     }
 
     const parsed = JSON.parse(contents)
     // Unserializing UID
-    this.uid.clear()
+    this.state.uid.clear()
     for (const key in parsed.UID) {
       if (!{}.hasOwnProperty.call(parsed.UID, key)) continue
-      this.uid.set(key, parsed.UID[key])
+      this.state.uid.set(key, parsed.UID[key])
     }
+    // Unserializing chunks
+    this.state.chunks = parsed.chunks.map(c => FileChunk.unserialize(c))
   }
   async getChunk(label: ?string = null, entries: Array<FileImport> = [], imports: Array<FileImport> = []): Promise<FileChunk> {
     const resolveImport = async (entry: FileImport) => {
@@ -162,8 +166,8 @@ class Context {
     return chunk
   }
   getUID(label: string): number {
-    const uid = (this.uid.get(label) || 0) + 1
-    this.uid.set(label, uid)
+    const uid = (this.state.uid.get(label) || 0) + 1
+    this.state.uid.set(label, uid)
     return uid
   }
   getImportRequest(request: string, from: ?string = null): FileImport {

@@ -4,7 +4,7 @@ import Path from 'path'
 import debounce from 'sb-debounce'
 import fileSystem from 'sb-fs'
 import differenceBy from 'lodash.differenceby'
-import { File, Context, MessageIssue } from 'pundle-api'
+import { File, Context, MessageIssue, FileMessageIssue } from 'pundle-api'
 import { CompositeDisposable, Disposable } from 'sb-event-kit'
 import type { FileChunk, FileImport } from 'pundle-api/types'
 
@@ -57,7 +57,7 @@ export default class Compilation {
       }
     }
     if (!loaderResult) {
-      throw new MessageIssue(`No loader configured in Pundle for '${filePath}'. Try adding pundle-loader-js (or another depending on filetype) with appropriate settings to your configuration`, 'error')
+      throw new FileMessageIssue(filePath, 'No loader configured in Pundle for this file. Try adding pundle-loader-js (or another depending on filetype) to your configuration', null, null, 'error')
     }
 
     // Plugin

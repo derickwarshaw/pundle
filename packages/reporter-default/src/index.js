@@ -48,6 +48,8 @@ export default createReporter(async function(context: Context, config: Object, e
     if (error.line !== null) {
       errorMessage += `:${error.line}:${error.column || 0}`
     }
+  } else if (error.constructor.name === 'MessageIssue') {
+    /* No Op */
   } else if (context.config.debug) {
     stack = error.stack
   }

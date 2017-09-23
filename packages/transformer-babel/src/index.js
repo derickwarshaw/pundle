@@ -52,7 +52,7 @@ export default createTransformer(async function(context: Context, config: Object
     if (error.loc) {
       throw new FileIssue(file.getFilePath(), file.getContents(), error.loc.line, error.loc.column, error.message, 'error')
     } else {
-      throw new FileMessageIssue(file.getFilePath(), error.message)
+      throw new FileMessageIssue(file.getFilePath(), error.message, null, null, 'error')
     }
   }
   const contents = processed.code
@@ -63,6 +63,6 @@ export default createTransformer(async function(context: Context, config: Object
   babelPath: 'babel-core',
   // ^ Path to resolve to get the babel-core module
   config: {},
-  extensions: [],
+  extensions: ['js'],
   exclude: [/(node_modules|bower_components)/],
 })

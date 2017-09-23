@@ -1,7 +1,6 @@
 /* @flow */
 
 import invariant from 'assert'
-import { extractMessage } from './helpers'
 
 const VALID_SEVERITIES = new Set(['info', 'warning', 'error'])
 
@@ -29,7 +28,7 @@ export class FileIssue {
     this.line = line
     this.column = column
     this.contents = contents
-    this.message = extractMessage(message)
+    this.message = message
     this.severity = severity.toLowerCase()
     this.$updateStack()
   }
@@ -60,26 +59,29 @@ export class FileMessageIssue {
   line: ?number;
   column: ?number;
   message: string;
+  severity: string;
 
   // For compatibility with Error object
   stack: string;
-  constructor(file: string, message: string, line: ?number = null, column: ?number = null) {
+  constructor(file: string, message: string, line: ?number = null, column: ?number = null, severity: string = 'error') {
     invariant(typeof file === 'string' && file, 'File must be a valid string')
     invariant(typeof message === 'string' && message, 'Message must be a valid string')
     invariant(typeof line === 'number' || line === null, 'Line must be a valid number or null')
     invariant(typeof column === 'number' || column === null, 'Column must be a valid number or null')
+    invariant(typeof severity === 'string', 'Severity must be valid')
 
     this.file = file
     this.line = line
     this.column = column
-    this.message = extractMessage(message)
+    this.message = message
+    this.severity = severity
 
     this.$updateStack()
   }
   $updateStack() {
     this.stack = `FileMessageIssue: ${this.message} at ${this.file}`
     if (this.line) {
-      this.stack += `${this.line}:${this.column || 0}`
+      this.stack += `${this.line || 0}:${this.column || 0}`
     }
   }
 }

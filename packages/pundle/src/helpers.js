@@ -61,9 +61,9 @@ export async function load(request: string | Object, rootDirectory: string): Pro
     return mainModule
   }
   if (!resolved) {
-    throw new FileMessageIssue('$root', `Unable to resolve '${request}'`)
+    throw new FileMessageIssue('$root', `Unable to resolve '${request}'`, null, null, 'error')
   }
-  throw new FileMessageIssue(resolved, 'Module exported incorrectly')
+  throw new FileMessageIssue(resolved, 'Module exported incorrectly', null, null, 'error')
 }
 
 export async function getLoadables(loadables: Array<Loadable>, rootDirectory: string): Promise<Array<Loaded>> {

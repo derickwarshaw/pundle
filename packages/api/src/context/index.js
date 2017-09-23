@@ -73,7 +73,7 @@ class Context {
         return result
       }
     }
-    throw new FileMessageIssue(from || this.config.rootDirectory, `Cannot find module '${request}'`)
+    throw new FileMessageIssue(from || this.config.rootDirectory, `Cannot find module '${request}'`, null, null, 'error')
   }
   async resolve(request: string, from: ?string = null, cached: boolean = true, exclude: Array<string> = []): Promise<string> {
     const resolved = await this.resolveAdvanced(request, from, cached, exclude)

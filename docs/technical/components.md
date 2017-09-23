@@ -110,7 +110,7 @@ Here's an example of a plugin that outputs the number of imports each file has
 const { createPlugin, FileMessageIssue } = require('pundle-api')
 
 module.exports = createPlugin(function(config, file) {
-  this.report(new FileMessageIssue(file.getFilePath(), `File has ${file.imports.length} imports`, null, null, 'info'))
+  this.report(new FileMessageIssue(file.getFilePath(), `File has ${file.imports.length} imports`, 'info'))
 }, {})
 ```
 

@@ -53,7 +53,7 @@ export default createTransformer(async function(context: Context, config: Object
       // TODO: Trim path from babel message here
       throw new FileIssue(file.getFilePath(), file.getContents(), 'error', error.loc.line, error.loc.column, error.message)
     } else {
-      throw new FileMessageIssue(file.getFilePath(), error.message, null, null, 'error')
+      throw new FileMessageIssue(file.getFilePath(), error.message, 'error')
     }
   }
   const contents = processed.code

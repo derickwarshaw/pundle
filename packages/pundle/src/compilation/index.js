@@ -57,7 +57,7 @@ export default class Compilation {
       }
     }
     if (!loaderResult) {
-      throw new FileMessageIssue(filePath, 'No loader configured in Pundle for this file. Try adding pundle-loader-js (or another depending on filetype) to your configuration', null, null, 'error')
+      throw new FileMessageIssue(filePath, 'No loader configured in Pundle for this file. Try adding pundle-loader-js (or another depending on filetype) to your configuration', 'error')
     }
 
     // Plugin

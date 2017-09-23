@@ -45,7 +45,7 @@ export default createResolver({
           // NOTE: We are failing because required module is different from what manifest allows
           throw new Error(`${moduleName} v${entry.version} did not match ${cacheVersion}`)
         }
-        context.report(new FileMessageIssue(fromFile, `${moduleName} v${entry.version} did not match ${cacheVersion}`, null, null, 'info'))
+        context.report(new FileMessageIssue(fromFile, `${moduleName} v${entry.version} did not match ${cacheVersion}`, 'info'))
       }
     }
     if (!matched) {

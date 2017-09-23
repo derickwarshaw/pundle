@@ -63,12 +63,12 @@ export class FileMessageIssue {
 
   // For compatibility with Error object
   stack: string;
-  constructor(file: string, message: string, line: ?number = null, column: ?number = null, severity: string = 'error') {
+  constructor(file: string, message: string, severity: string = 'error', line: ?number = null, column: ?number = null) {
     invariant(typeof file === 'string' && file, 'File must be a valid string')
     invariant(typeof message === 'string' && message, 'Message must be a valid string')
+    invariant(VALID_SEVERITIES.has(severity), 'Severity must be valid')
     invariant(typeof line === 'number' || line === null, 'Line must be a valid number or null')
     invariant(typeof column === 'number' || column === null, 'Column must be a valid number or null')
-    invariant(VALID_SEVERITIES.has(severity), 'Severity must be valid')
 
     this.file = file
     this.line = line

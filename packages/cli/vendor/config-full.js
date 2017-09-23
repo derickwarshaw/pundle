@@ -57,8 +57,6 @@ module.exports = {
   components: [
     'pundle-plugin-dedupe',
     'pundle-plugin-npm-installer',
-    ['pundle-transformer-babel', {
-      extensions: ['jsx'],
-    }],
+    'pundle-transformer-babel',
   ],
 }

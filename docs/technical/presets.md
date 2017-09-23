@@ -9,7 +9,7 @@ module.exports = [
   {
     name: 'loader',
     config: {
-      extensions: ['js', 'jsx'],
+      extensions: ['js'],
     },
     component: require.resolve('pundle-loader-js'),
   },

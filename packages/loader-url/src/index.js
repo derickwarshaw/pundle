@@ -4,6 +4,7 @@ import fileSystem from 'sb-fs'
 import { createLoader, shouldProcess } from 'pundle-api'
 import type { Context, File } from 'pundle-api/types'
 
+// TODO: Return relative url if file is bigger than the limit
 export default createLoader(async function(context: Context, config: Object, file: File) {
   if (!shouldProcess(context.config.rootDirectory, file.filePath, config)) {
     return null

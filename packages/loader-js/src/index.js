@@ -146,5 +146,5 @@ export default createLoader(async function(context: Context, config: Object, fil
     sourceMap,
   }
 }, {
-  extensions: ['js', 'jsx'],
+  extensions: ['js'],
 })

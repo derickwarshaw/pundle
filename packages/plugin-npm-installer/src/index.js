@@ -70,6 +70,5 @@ export default createResolver({
   silent: false,
   beforeInstall() { /* No Op */ },
   afterInstall() { /* No Op */ },
-  include: ['*'],
   exclude: [/(node_modules|bower_components)/],
 }, false)

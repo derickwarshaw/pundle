@@ -19,7 +19,7 @@ presets: [
   ['pundle-preset-default', {
     reporter: false,
     'loader-js': {
-      extensions: ['js', 'jsx'],
+      extensions: ['js'],
     },
   }],
   // ^ Resolves module from root directory, disables the reporter component and specifies config for loader-js

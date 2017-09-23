@@ -46,7 +46,8 @@ export default createLoader(async function(context: Context, config: Object, fil
     })
   } catch (error) {
     if (error.loc) {
-      throw new FileIssue(file.getFilePath(), file.getContents(), error.loc.line, error.loc.column, error.message, 'error')
+      // TODO: Trim path from babel message here
+      throw new FileIssue(file.getFilePath(), file.getContents(), 'error', error.loc.line, error.loc.column, error.message)
     } else {
       throw new FileMessageIssue(file.getFilePath(), error.message, null, null, 'error')
     }
